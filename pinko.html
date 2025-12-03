@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Responsive Navbar — Tailwind</title>
+
+  <!-- Tailwind Play CDN for simplicity (good for prototypes). 
+       For production, compile Tailwind locally for smaller CSS. -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Optional: tweak Tailwind theme tokens quickly -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              500: '#06b6d4', // teal-ish accent
+            },
+            bg: '#0f172a' // deep navy background
+          },
+          boxShadow: {
+            'nav': '0 4px 20px rgba(2,6,23,0.35)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Small helper: prevents body scroll when mobile menu is open */
+    body.menu-open {
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body class="antialiased text-slate-100 bg-slate-50">
+
+  <!-- NAVBAR: sticky at top with subtle shadow and backdrop -->
+  <header class="sticky top-0 z-50">
+    <nav
+      class="bg-white/95 backdrop-blur-sm border-b border-slate-200/60 shadow-nav transition-shadow duration-300"
+      aria-label="Primary navigation"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <!-- left: Brand -->
+          <div class="flex items-center min-w-0">
+            <a href="#" class="flex items-center gap-3">
+              <!-- Brand mark (simple SVG) -->
+              <svg class="w-8 h-8 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="2" y="2" width="20" height="20" rx="6" fill="url(#g)"></rect>
+                <defs>
+                  <linearGradient id="g" x1="0" x2="1">
+                    <stop offset="0" stop-color="#06b6d4"/>
+                    <stop offset="1" stop-color="#0ea5a4"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              <!-- Brand text -->
+              <span class="font-semibold text-slate-900 text-lg sm:text-xl leading-none">
+                TidalUI
+              </span>
+            </a>
+          </div>
+
+          <!-- right: Desktop links -->
+          <div class="hidden md:flex md:items-center md:space-x-6">
+            <a href="#" class="text-slate-700 hover:text-slate-900 transition-colors duration-200">Product</a>
+            <a href="#" class="text-slate-700 hover:text-slate-900 transition-colors duration-200">Pricing</a>
+            <a href="#" class="text-slate-700 hover:text-slate-900 transition-colors duration-200">Docs</a>
+            <a href="#" class="text-slate-700 hover:text-slate-900 transition-colors duration-200">Company</a>
+            <a href="#" class="px-4 py-2 rounded-md bg-brand-500 text-white font-medium shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200">
+              Get started
+            </a>
+          </div>
+
+          <!-- Mobile: Hamburger -->
+          <div class="flex md:hidden">
+            <button
+              id="menu-toggle"
+              aria-controls="mobile-menu"
+              aria-expanded="false"
+              aria-label="Open main menu"
+              class="inline-flex items-center justify-center p-2 rounded-md text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition"
+            >
+              <!-- hamburger icon -->
+              <svg id="hamburger-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- MOBILE SLIDE-OVER (hidden on md+) -->
+  <div
+    id="mobile-menu"
+    class="fixed inset-0 z-40 hidden"
+    aria-hidden="true"
+  >
+    <!-- overlay -->
+    <div id="menu-overlay" class="absolute inset-0 bg-black/40 transition-opacity duration-300 opacity-0"></div>
+
+    <!-- slide-over panel (from right) -->
+    <aside
+      role="dialog"
+      aria-modal="true"
+      aria-label="Mobile menu"
+      class="absolute right-0 top-0 h-full w-80 max-w-full transform translate-x-full transition-transform duration-300 ease-in-out"
+      id="slide-panel"
+    >
+      <div class="h-full bg-white shadow-xl flex flex-col">
+        <!-- header inside panel -->
+        <div class="px-4 py-4 flex items-center justify-between border-b">
+          <div class="flex items-center gap-3">
+            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="2" y="2" width="20" height="20" rx="6" fill="url(#g2)"></rect>
+              <defs>
+                <linearGradient id="g2" x1="0" x2="1">
+                  <stop offset="0" stop-color="#06b6d4"/>
+                  <stop offset="1" stop-color="#0ea5a4"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <span class="font-semibold text-slate-900">TidalUI</span>
+          </div>
+
+          <!-- close button -->
+          <button id="menu-close" aria-label="Close menu" class="p-2 rounded-md text-slate-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- nav items -->
+        <nav class="px-4 py-6 space-y-2 flex-1 overflow-auto">
+          <a href="#" class="block px-3 py-3 rounded-md text-slate-800 hover:bg-slate-50 transition">Product</a>
+          <a href="#" class="block px-3 py-3 rounded-md text-slate-800 hover:bg-slate-50 transition">Pricing</a>
+          <a href="#" class="block px-3 py-3 rounded-md text-slate-800 hover:bg-slate-50 transition">Docs</a>
+          <a href="#" class="block px-3 py-3 rounded-md text-slate-800 hover:bg-slate-50 transition">Company</a>
+
+          <!-- CTA in mobile -->
+          <div class="mt-4">
+            <a href="#" class="block text-center px-4 py-3 rounded-md bg-brand-500 text-white font-medium shadow-sm hover:shadow-md transition">Get started</a>
+          </div>
+        </nav>
+
+        <!-- footer small legal links -->
+        <div class="px-4 py-4 border-t text-sm text-slate-500">
+          <a href="#" class="hover:underline">Privacy</a> · <a href="#" class="hover:underline">Terms</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+ 
+
+  <!-- JAVASCRIPT: handles toggle, outside click, escape key, and accessibility attributes -->
+  <script>
+    (function () {
+      const menuToggleBtn = document.getElementById('menu-toggle');
+      const mobileMenu = document.getElementById('mobile-menu');
+      const slidePanel = document.getElementById('slide-panel');
+      const overlay = document.getElementById('menu-overlay');
+      const menuCloseBtn = document.getElementById('menu-close');
+
+      // Utility: set aria-expanded and body class
+      function openMenu() {
+        mobileMenu.classList.remove('hidden');
+        // trigger transitions (allow next frame)
+        requestAnimationFrame(() => {
+          overlay.classList.remove('opacity-0');
+          overlay.classList.add('opacity-100');
+          slidePanel.classList.remove('translate-x-full');
+          slidePanel.classList.add('translate-x-0');
+        });
+        menuToggleBtn.setAttribute('aria-expanded', 'true');
+        document.body.classList.add('menu-open');
+        // trap focus simply by focusing close button (for small menu)
+        menuCloseBtn.focus();
+        // mark visible for screen readers
+        mobileMenu.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeMenu() {
+        overlay.classList.remove('opacity-100');
+        overlay.classList.add('opacity-0');
+        slidePanel.classList.remove('translate-x-0');
+        slidePanel.classList.add('translate-x-full');
+
+        // wait for transition to finish before hiding entirely
+        setTimeout(() => {
+          if (!mobileMenu.classList.contains('hidden')) {
+            mobileMenu.classList.add('hidden');
+          }
+        }, 300); // matches duration-300
+
+        menuToggleBtn.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('menu-open');
+        mobileMenu.setAttribute('aria-hidden', 'true');
+        menuToggleBtn.focus();
+      }
+
+      // Toggle handler
+      menuToggleBtn.addEventListener('click', (e) => {
+        const expanded = menuToggleBtn.getAttribute('aria-expanded') === 'true';
+        if (expanded) closeMenu(); else openMenu();
+      });
+
+      // Close button inside panel
+      menuCloseBtn.addEventListener('click', closeMenu);
+
+      // Click overlay to close
+      overlay.addEventListener('click', closeMenu);
+
+      // Click outside the panel should close (also covers overlay)
+      document.addEventListener('click', (event) => {
+        if (mobileMenu.classList.contains('hidden')) return;
+        // if click target is inside slidePanel, do nothing
+        if (slidePanel.contains(event.target) || menuToggleBtn.contains(event.target)) return;
+        // else close
+        closeMenu();
+      }, true);
+
+      // Escape key to close
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
+          closeMenu();
+        }
+      });
+
+      // Accessibility: ensure panel hidden on larger screens (cleanup)
+      const mq = window.matchMedia('(min-width: 768px)');
+      function handleMqChange() {
+        if (mq.matches) {
+          // on desktop keep menu closed and hidden
+          if (!mobileMenu.classList.contains('hidden')) {
+            // immediate hide (no transition) to avoid flicker
+            overlay.classList.remove('opacity-100');
+            overlay.classList.add('opacity-0');
+            slidePanel.classList.remove('translate-x-0');
+            slidePanel.classList.add('translate-x-full');
+            mobileMenu.classList.add('hidden');
+            menuToggleBtn.setAttribute('aria-expanded', 'false');
+            document.body.classList.remove('menu-open');
+          }
+        }
+      }
+      mq.addListener(handleMqChange);
+      handleMqChange();
+    })();
+  </script>
+
+  <!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hero Section</title>
+
+<!-- Tailwind CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: {
+            500: "#6366F1", /* Indigo accent */
+            600: "#4F46E5",
+            700: "#4338CA",
+          }
+        },
+        boxShadow: {
+          smooth: "0 8px 24px rgba(0,0,0,0.12)"
+        }
+      }
+    }
+  }
+</script>
+</head>
+
+<body class="bg-white text-slate-900 antialiased">
+
+<!-- HERO SECTION -->
+<section class="relative overflow-hidden">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8 py-20">
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+      <!-- IMAGE ON MOBILE (TOP) -->
+      <div class="lg:order-2 flex justify-center lg:justify-end">
+        <img 
+          src="https://images.unsplash.com/photo-1522199755839-a2bacb67c546?auto=format&fit=crop&w=900&q=80"
+          alt="Hero Illustration"
+          class="w-full max-w-md rounded-2xl shadow-smooth"
+        />
+      </div>
+
+      <!-- TEXT ON LEFT -->
+      <div class="lg:order-1 space-y-6">
+        
+        <!-- Bold clean modern headline -->
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">
+  Build Beautiful, Modern Websites Faster.
+</h1>
+
+        <!-- Subheading -->
+        <p class="text-lg sm:text-xl text-slate-600 max-w-lg">
+          A clean and powerful UI framework crafted for startups, creators, and modern product teams.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 pt-4">
+
+          <!-- Primary CTA -->
+          <a href="#"
+             class="px-8 py-4 rounded-xl bg-brand-600 text-white font-semibold shadow-smooth
+                    hover:bg-brand-700 hover:-translate-y-0.5 hover:shadow-lg
+                    transform transition-all duration-200 text-center">
+            Get Started
+          </a>
+
+          <!-- Secondary CTA -->
+          <a href="#"
+             class="px-8 py-4 rounded-xl border border-slate-300 bg-white text-slate-800 font-semibold shadow
+                    hover:shadow-smooth hover:-translate-y-0.5 hover:bg-slate-50
+                    transform transition-all duration-200 text-center">
+            Learn More
+          </a>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="py-24 bg-white" id="features">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8">
+
+    <!-- Section Header -->
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <h2 class="text-3xl sm:text-4xl font-bold text-slate-900">
+        Powerful Features for Modern Teams
+      </h2>
+      <p class="mt-4 text-lg text-slate-600">
+        Everything you need to move faster, build confidently, and scale beautifully.
+      </p>
+    </div>
+
+    <!-- Responsive Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+
+      <!-- CARD 1 -->
+      <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+        <!-- Icon wrapper -->
+        <div class="w-14 h-14 rounded-xl bg-indigo-100 flex items-center justify-center mb-6">
+          <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2"
+               viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6"></path>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold text-slate-900 mb-2">Smart Dashboard</h3>
+        <p class="text-slate-600 leading-relaxed">
+          Get a real-time overview of data, activity, and project health with a beautifully designed dashboard.
+        </p>
+      </div>
+
+      <!-- CARD 2 -->
+      <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+        <div class="w-14 h-14 rounded-xl bg-pink-100 flex items-center justify-center mb-6">
+          <svg class="w-7 h-7 text-pink-600" fill="none" stroke="currentColor" stroke-width="2"
+               viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 17v-6a2 2 0 012-2h2a2 2 0 012 2v6m4 0H5"></path>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold text-slate-900 mb-2">Secure Authentication</h3>
+        <p class="text-slate-600 leading-relaxed">
+          Protect user data with industry-grade security, encrypted sessions, and multi-factor authentication.
+        </p>
+      </div>
+
+      <!-- CARD 3 -->
+      <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+        <div class="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center mb-6">
+          <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" stroke-width="2"
+               viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path>
+            <path d="M12 4h9"></path>
+            <path d="M6 9l-3 3 3 3"></path>
+            <path d="M3 12h13"></path>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold text-slate-900 mb-2">Fast Integrations</h3>
+        <p class="text-slate-600 leading-relaxed">
+          Connect your favorite tools instantly with well-documented APIs and pre-built integrations.
+        </p>
+      </div>
+
+      <!-- CARD 4 -->
+      <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+        <div class="w-14 h-14 rounded-xl bg-green-100 flex items-center justify-center mb-6">
+          <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" stroke-width="2"
+               viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 3h18v4H3z"></path>
+            <path d="M3 17h18v4H3z"></path>
+            <path d="M3 10h18v4H3z"></path>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold text-slate-900 mb-2">Organized Workflows</h3>
+        <p class="text-slate-600 leading-relaxed">
+          Streamline tasks, automate repetitive work, and create clear workflows for your entire team.
+        </p>
+      </div>
+
+      <!-- CARD 5 -->
+      <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+        <div class="w-14 h-14 rounded-xl bg-yellow-100 flex items-center justify-center mb-6">
+          <svg class="w-7 h-7 text-yellow-600" fill="none" stroke="currentColor" stroke-width="2"
+               viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 16h-1v-4h-1"></path>
+            <path d="M12 8h.01"></path>
+            <path d="M12 22C6.48 22 2 17.52 2 12 2 6.48 6.48 2 12 2s10 4.48 10 10c0 5.52-4.48 10-10 10z"></path>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold text-slate-900 mb-2">24/7 Support</h3>
+        <p class="text-slate-600 leading-relaxed">
+          Our expert team is available around the clock to help you resolve issues and stay productive.
+        </p>
+      </div>
+
+      <!-- CARD 6 -->
+      <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+        <div class="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center mb-6">
+          <svg class="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" stroke-width="2"
+               viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v18"></path>
+            <path d="M3 12h18"></path>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold text-slate-900 mb-2">Scalable Architecture</h3>
+        <p class="text-slate-600 leading-relaxed">
+          Grow your business without limits using infrastructure designed to scale effortlessly.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="bg-gray-50 py-16 px-4">
+  <div class="max-w-xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
+    
+    <!-- Title + Subtitle -->
+    <div class="text-center mb-8">
+      <h2 class="text-3xl font-bold text-gray-800">Get in Touch</h2>
+      <p class="text-gray-500 mt-2">Fill out the form and our team will reach out to you soon.</p>
+    </div>
+
+    <!-- Contact Form -->
+    <form class="space-y-6">
+      
+      <!-- Name -->
+      <div>
+        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+        <input 
+          type="text" 
+          id="name" 
+          name="name" 
+          required
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <!-- Email -->
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          required
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <!-- Phone -->
+      <div>
+        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone (Optional)</label>
+        <input 
+          type="tel" 
+          id="phone" 
+          name="phone"
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <!-- Message -->
+      <div>
+        <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+        <textarea 
+          id="message" 
+          name="message" 
+          rows="4" 
+          required
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        ></textarea>
+      </div>
+
+      <!-- Submit Button -->
+      <button 
+        type="submit" 
+        class="w-full bg-blue-600 text-white py-3 rounded-xl shadow-md hover:bg-blue-700 hover:-translate-y-0.5 transition-all duration-300"
+      >
+        Submit
+      </button>
+    </form>
+  </div>
+</section>
+
+<footer class="bg-gray-900 text-gray-300 py-14 px-6">
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- Top Footer Layout -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 border-b border-gray-700 pb-10">
+      
+      <!-- Brand -->
+      <div>
+        <h2 class="text-2xl font-semibold text-white">TidalUI</h2>
+        <p class="text-gray-400 mt-3 leading-relaxed">
+          Building modern digital experiences with quality and precision.
+        </p>
+        <!-- Social Icons -->
+        <div class="flex space-x-4 mt-5">
+          <!-- Facebook -->
+          <a href="#" class="hover:text-white transition">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M22 12.07C22 6.477 17.523 2 11.93 2S1.86 6.477 1.86 12.07c0 4.988 3.657 9.128 8.438 9.878v-6.987H7.898v-2.891h2.4V9.845c0-2.379 1.418-3.69 3.588-3.69 1.039 0 2.125.186 2.125.186v2.335h-1.197c-1.18 0-1.547.733-1.547 1.484v1.78h2.63l-.421 2.891h-2.209v6.987c4.781-.75 8.438-4.89 8.438-9.878z"/>
+            </svg>
+          </a>
+
+          <!-- Twitter -->
+          <a href="#" class="hover:text-white transition">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M22.46 6c-.77.35-1.6.58-2.46.69a4.16 4.16 0 001.82-2.31 8.19 8.19 0 01-2.61 1A4.11 4.11 0 0015.5 4a4.15 4.15 0 00-4.14 4.14c0 .32.04.64.1.94A11.72 11.72 0 013 5.16a4.14 4.14 0 001.28 5.53 4 4 0 01-1.87-.52v.05a4.17 4.17 0 003.32 4.08 4.27 4.27 0 01-1.86.07 4.17 4.17 0 003.9 2.9A8.33 8.33 0 012 19.54a11.72 11.72 0 006.29 1.84c7.55 0 11.68-6.25 11.68-11.67 0-.18-.01-.36-.02-.54A8.18 8.18 0 0022.46 6z"/>
+            </svg>
+          </a>
+
+          <!-- Instagram -->
+          <a href="#" class="hover:text-white transition">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M7 2C4.24 2 2 4.24 2 7v10c0 2.76 2.24 5 5 5h10c2.76 0 5-2.24 5-5V7c0-2.76-2.24-5-5-5H7zm10 2c1.65 0 3 1.35 3 3v10c0 1.65-1.35 3-3 3H7c-1.65 0-3-1.35-3-3V7c0-1.65 1.35-3 3-3h10zm-5 3.9A4.1 4.1 0 1016.1 12 4.1 4.1 0 0012 7.9zm0 6.7A2.6 2.6 0 1114.6 12 2.6 2.6 0 0112 14.6zm4.4-8.7a1 1 0 11-1-1 1 1 0 011 1z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Products -->
+      <div>
+        <h3 class="text-lg font-semibold text-white mb-4">Products</h3>
+        <ul class="space-y-2">
+          <li><a class="hover:text-white transition" href="#">Landing Pages</a></li>
+          <li><a class="hover:text-white transition" href="#">UI Kits</a></li>
+          <li><a class="hover:text-white transition" href="#">Templates</a></li>
+          <li><a class="hover:text-white transition" href="#">Integrations</a></li>
+        </ul>
+      </div>
+
+      <!-- Company -->
+      <div>
+        <h3 class="text-lg font-semibold text-white mb-4">Company</h3>
+        <ul class="space-y-2">
+          <li><a class="hover:text-white transition" href="#">About Us</a></li>
+          <li><a class="hover:text-white transition" href="#">Careers</a></li>
+          <li><a class="hover:text-white transition" href="#">Blog</a></li>
+          <li><a class="hover:text-white transition" href="#">Press</a></li>
+        </ul>
+      </div>
+
+      <!-- Support -->
+      <div>
+        <h3 class="text-lg font-semibold text-white mb-4">Support</h3>
+        <ul class="space-y-2">
+          <li><a class="hover:text-white transition" href="#">Help Center</a></li>
+          <li><a class="hover:text-white transition" href="#">Documentation</a></li>
+          <li><a class="hover:text-white transition" href="#">Status</a></li>
+          <li><a class="hover:text-white transition" href="#">Contact Support</a></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Bottom Footer -->
+    <div class="flex flex-col md:flex-row justify-between items-center pt-6 text-gray-400 text-sm">
+      <p>© 2025 TidalUI. All rights reserved.</p>
+      <p class="mt-2 md:mt-0">Contact: support@TidalUI.com</p>
+    </div>
+
+  </div>
+</footer>
+
+
+</body>
+</html>
+
+</body>
+</html>
